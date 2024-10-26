@@ -45,6 +45,28 @@ Tasks 1-2
 
 Task 3
 
+Results of unmodified analysis:
+
+| Metric      | Estimator | Estimate |
+|-------------|-----------|----------|
+| sensitivity | binary    | 0.8750   |
+| specificity | binary    | 0.8000   |
+| accuracy    | binary    | 0.8387   |
+| roc_auc     | binary    | 0.9083   |
+
+**Modification 1:** In the original analysis, the t-test and random forest methods of selecting important proteins were conducted using the entire biomarker dataset. For the first modification, proteins were selected by partioning the dataset into training and testing groups before analysis, then using training data to select proteins and evaluating the resulting panel's accuracy using testing data.
+
+Below are the results of this modification:
+
+| Metric      | Estimator | Estimate |
+|-------------|-----------|----------|
+| sensitivity | binary    | 0.7647   |
+| specificity | binary    | 0.7857   |
+| accuracy    | binary    | 0.7741   |
+| roc_auc     | binary    | 0.8067   |
+
+As we can see, each metric used to evaluate the accuracy of our classifier became worse. Both sensitivity (% of true positives) and roc_auc (a measure of true positive rate and false positive rate ) decreased by over 10 percentage points, while specificity (% of true negatives) and accuracy (% correct) decreased by modest amounts. Thus it seems that partitioning the data prior to conducting analysis in this scenario did not improve results, which is not too surprising considering the modified models were given less data to train on than the unmodified ones. Had more observations been in the biomarker dataset, the results may have more closely aligned.
+
 ### Improved classifier
 
 Task 4
