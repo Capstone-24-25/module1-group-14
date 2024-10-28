@@ -1,0 +1,27 @@
+library(tidyverse)
+library(tidymodels)
+library(modelr)
+library(rsample)
+library(yardstick)
+
+s_star <- c("E3 ubiquitin-protein ligase CHIP", "CCAAT/enhancer-binding protein beta")
+biomarker_visual = read.csv("/Users/seanreagan/Documents/GitHub/module1-group-14/data/biomarker-raw.csv")
+
+biomarker_visual
+biomarker_final = biomarker_visual %>% 
+  select(Group, E3.ubiquitin.protein.ligase.CHIP, CCAAT.enhancer.binding.protein.beta) %>%
+  mutate(class = (Group == 'ASD')) %>%
+  select(-Group)
+
+biomarker_boxplot = biomarker_final %>% 
+                  ggplot() +
+                    geom_boxplot(aes(x = E3.ubiquitin.protein.ligase.CHIP))
+biomarker_boxplot
+  
+
+  biomarker <- read_csv(url) %>%
+  # subset to proteins of interest and group
+  select(group, any_of(s_star)) %>%
+  # convert group (chr) to binary (lgl)
+  mutate(class = (group == 'ASD')) %>%
+  select(-group)

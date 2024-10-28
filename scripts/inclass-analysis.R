@@ -102,3 +102,4 @@ testing(biomarker_split) %>%
   class_metrics(estimate = est,
               truth = tr_c, pred,
               event_level = 'second')
+
