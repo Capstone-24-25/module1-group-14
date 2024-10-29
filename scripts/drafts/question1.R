@@ -4,8 +4,7 @@ library(tidyr)
 library(dplyr)
 
 # Read the data
-getwd()
-data <- read.csv("/Users/seanreagan/Documents/GitHub/module1-group-14/data/biomarker-raw.csv")
+data <- read.csv("data/biomarker-raw.csv")
 
 # Select a subset of columns for proteins (skip the first two columns)
 protein_columns <- colnames(data)[3:length(colnames(data))]
@@ -42,4 +41,22 @@ ggplot(protein_data_long, aes(x = Raw_Value)) +
 # we are able to normalize the data which allows us to perform the t-tests on the data 
 # that require normality to be accurate in their analysis.
 
+# Load required libraries
+library(tidyverse)
+
+# Load the cleaned biomarker data
+load('data/biomarker-clean.RData')
+
+sampled_proteins <- biomarker_clean %>%
+  select(sample(names(.), 5)) %>%
+  pivot_longer(cols = everything(), names_to = "Protein", values_to = "Transformed_Value")
+
+# Plot histograms for each selected protein using facet_wrap (Transformed Values)
+ggplot(sampled_proteins, aes(x = Transformed_Value)) +
+  geom_histogram(binwidth = 0.5, fill = "skyblue", color = "black") +
+  facet_wrap(~ Protein, scales = "free") +
+  labs(title = "Histograms of Transformed Values for Selected Proteins",
+       x = "Transformed Value",
+       y = "Frequency") +
+  theme_minimal()
 
