@@ -1,5 +1,6 @@
 ## ----------------------- Question 1 ------------------------------------------
 # Load necessary libraries
+library(tidyverse)
 library(ggplot2)
 library(tidyr)
 library(dplyr)
@@ -34,9 +35,6 @@ ggplot(protein_data_long, aes(x = Raw_Value)) +
   theme_minimal()
 
 # Cleaned data distribution after being log transformed
-
-# Load required libraries
-library(tidyverse)
 
 # Load the cleaned biomarker data
 load('data/biomarker-clean.RData')
