@@ -14,8 +14,6 @@ execute:
   cache: true
 ---
 
-Use this as a template. Keep the headers and remove all other text. In all, your report can be quite short. When it is complete, render and then push changes to your team repository.
-
 ```{r}
 # load any other packages and read data here
 library(tidyverse)
@@ -27,7 +25,9 @@ Write a brief one-paragraph abstract that describes the contents of your write-u
 
 ## Dataset
 
-Write a brief data description, including: how data were obtained; sample characteristics; variables measured; and data preprocessing. This can be largely based on the source paper and should not exceed 1-2 paragraphs.
+For the paper, 154 male pediatric subjects were measured and split into two groups (ASD and TD). From the write-up, "The ethnic breakdown was as follows: 73 White/Caucasian, 32 Hispanic/Latino, 17 African American/Black, 5 Asian or Pacific Islander, 23 multiple ethnicities or other, and 4 not reported". This gave the researchers a fairly large variety to do their analysis on. The data on the proteins was collected through a blood draw that was then carefully stored for analysis.
+
+The resulting blood results contained a look at 1,317 proteins from the 154 participants. 192 of which were excluded because they lacked quality control so the end dataset examined 1,125 proteins. These protein values were then normalized through a log10 transform into a z transform. Finally, any outliers that resided above or below 3 and -3 respectively were clipped to 3 and -3 respectively. This preproccessing allowed the researchers to then perform three different tests on the dataset given its new configuration.
 
 ## Summary of published analysis
 
@@ -137,7 +137,7 @@ ggplot(sampled_proteins, aes(x = Transformed_Value)) +
   theme_minimal()
 ```
 
-Here, we can see that the values are much easier to analyze and deal with. They are mostly normally distributed now and their values are ranging between -2 and 2 instead of more sporadic values that populated the histograms with the raw csv file.
+Here, we can see that the values are much easier to analyze and deal with. They are mostly normally distributed now and their values are ranging between a much more understandable range instead of more sporadic values that populated the histograms with the raw csv file. For understanding the data and performing the tests it absolutely is logical to do a log10 transformation as seen in the process above with the clear change in the readability of the data.
 
 Task 2
 
