@@ -4,6 +4,7 @@ library(randomForest)
 library(tidymodels)
 library(modelr)
 library(yardstick)
+library(fedmatch)
 load('data/biomarker-clean.RData')
 
 ## MULTIPLE TESTING
@@ -96,7 +97,7 @@ class_metrics <- metric_set(sensitivity,
                             accuracy,
                             roc_auc)
 
-results <- testing(biomarker_split) %>%
+testing(biomarker_split) %>%
   add_predictions(fit, type = 'response') %>%
   mutate(est = as.factor(pred > 0.5), tr_c = as.factor(class)) %>%
   class_metrics(estimate = est,
@@ -303,3 +304,5 @@ testing(biomarker_split) %>%
   class_metrics(estimate = est,
                 truth = tr_c, pred,
                 event_level = 'second')
+
+# Modification 3: Fuzzy intersection to combine selected proteins
