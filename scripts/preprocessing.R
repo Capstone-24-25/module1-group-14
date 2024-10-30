@@ -35,13 +35,13 @@ biomarker_clean <- read_csv('data/biomarker-raw.csv',
   
   
   # log transform, center and scale, and trim
-  #mutate(across(.cols = -c(group, ados), 
-  #~ trim(scale(log10(.x))[, 1], .at = 3))) %>%
+  mutate(across(.cols = -c(group, ados), 
+  ~ trim(scale(log10(.x))[, 1], .at = 3))) %>%
   
   # log transform, center and scale, without trimming
   # dont need .at=3 bc not part of scale() parameters
-  mutate(across(.cols = -c(group, ados),
-                ~ scale(log10(.x))[,1])) %>%
+  #mutate(across(.cols = -c(group, ados),
+                #~ scale(log10(.x))[,1])) %>%
   
   
   
