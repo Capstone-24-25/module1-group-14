@@ -6,8 +6,8 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="List names here">
-<meta name="dcterms.date" content="2024-10-29">
+<meta name="author" content="Benjamin Drabeck, Yamileth Martinez, Sean Ragan, Carter Kulm">
+<meta name="dcterms.date" content="2024-10-30">
 
 <title>Biomarkers of ASD</title>
 <style>
@@ -51,7 +51,7 @@ ul.task-list li input[type="checkbox"] {
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
 <h1 class="title">Biomarkers of ASD</h1>
-<p class="subtitle lead">If you want a subtitle put it here</p>
+<p class="subtitle lead">Group 14</p>
 </div>
 
 
@@ -61,14 +61,14 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p>List names here </p>
+             <p>Benjamin Drabeck, Yamileth Martinez, Sean Ragan, Carter Kulm </p>
           </div>
   </div>
     
     <div>
     <div class="quarto-title-meta-heading">Updated</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">October 29, 2024</p>
+      <p class="date">October 30, 2024</p>
     </div>
   </div>
   
@@ -82,7 +82,7 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="abstract" class="level2">
 <h2 class="anchored" data-anchor-id="abstract">Abstract</h2>
-<p>Write a brief one-paragraph abstract that describes the contents of your write-up.</p>
+<p>Using the analysis conducted by Hewitson et al in 2021 that set out to classify young males as either ASD or TD using the biomarker dataset, our group set out to understand the methodology employed in the original study in addition to developing a deeper understanding of the dataset and the predictive power of the proteins contained in it. For the preprocessing aspect of our work, we first looked at the necessary transformations required to conduct multiple testing on the data. We then looked at the difference in outlier characteristics between the ASD and TD groups, and found that both groups were similar in this realm. Moving on to the analysis of the biomarker dataset, task 3 consisted of seeing the effect that three slight differences in methodology had on the classification accuracy of the model. And lastly, in task 4 a grid search was used to finalize the proteins that were to be included in the panel used in the model.</p>
 </section>
 <section id="dataset" class="level2">
 <h2 class="anchored" data-anchor-id="dataset">Dataset</h2>
@@ -119,6 +119,7 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </div>
+<p><strong>Note</strong>: talked to TA Erika and Mermaid chunk would not run (tried dot as well). But, code renders.</p>
 <p>As we can see, the study used three different methods to find the most important proteins (out of an original 1225) for predicting ASD: Random Forest, t-test, and a correlation approach. ten were selected from each method, and the five proteins common to all three groups of ten were labelled as “core” proteins. Furthermore, out of thirteen proteins that were not common among all three groups but were found to be among the ten most important using one of the methods, four proteins were found to increase the predictive accuracy of the panel, and were thus added to these optimal proteins. The proteins are listed here: IgD, suPAR, MAPK14, EPHB2, DERM, ROR1, GI24, eIF-4H, ARSB.</p>
 <p>To evaluate the classification accuracy of these optimal proteins, a logistic regression model was used and area under the ROC curve (AUC) was used as the primary metric. The resulting estimated accuracy of this panel in classifying ASD, as measured with AUC, was 0.860 +- 0.064.</p>
 </section>
@@ -149,6 +150,59 @@ ul.task-list li input[type="checkbox"] {
 </div>
 <p>Here, we can see that the values are much easier to analyze and deal with. They are mostly normally distributed now and their values are ranging between a much more understandable range instead of more sporadic values that populated the histograms with the raw csv file. For understanding the data and performing the tests it absolutely is logical to do a log10 transformation as seen in the process above with the clear change in the readability of the data.</p>
 <p>Task 2</p>
+<p>For the second task we were asked to perform an exploratory analysis on the outlying values after removing the outlier trimming. After temporarily removing the outlier trimming, we needed to identify the outlying values in the biomarker_clean.R file. However, during this process, multiple group members needed the data with the trimmed outliers, so we thought it would be best to create a copy of preprocessing.R (copy_preprocessing.R) and biomarker_clean.R (biomarker_clean2.R).</p>
+<p>We first needed to identify the outliers, which we did using interquartile range. After applying the outlier function to the data, excluding the <code>group</code> and <code>ados</code> categories as they are categorical, we identified the subjects with the most outliers, as shown below.</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 154 × 3
+   group  ados outlier_count
+   &lt;chr&gt; &lt;dbl&gt;         &lt;int&gt;
+ 1 TD       NA           318
+ 2 TD       NA           282
+ 3 ASD       7           237
+ 4 TD       NA           199
+ 5 ASD      22           195
+ 6 TD       NA           183
+ 7 TD       NA           172
+ 8 ASD       6           169
+ 9 TD       NA           164
+10 TD       NA           158
+# ℹ 144 more rows</code></pre>
+</div>
+</div>
+<p>We then wanted to see which group of subjects had the higher number of outliers, which we did using a summary of the outliers. This gave us the subject and compares the mean and maximum number of outliers, which is displayed below.</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 5
+  group mean_outliers max_outliers min_outliers count
+  &lt;chr&gt;         &lt;dbl&gt;        &lt;int&gt;        &lt;int&gt; &lt;int&gt;
+1 ASD            43.9          236            6    76
+2 TD             44.4          317            6    78</code></pre>
+</div>
+</div>
+<p>Below are visual, graphical representations of the outlier count by group.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="report_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="report_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>As you can see through our exploratory analysis, both groups have similar mean outliers, as well as total number of outliers. There does not appear to be more outliers in one group of subjects than the other, which we can see when looking at both our summary of the outliers and the visual representations. The boxplot shows more clearly the variation in the TD group than the ASD group when it comes to outliers, but overall, the ASD and TD groups are similar in their counts of outlying values.</p>
 </section>
 <section id="methodological-variations" class="level3">
 <h3 class="anchored" data-anchor-id="methodological-variations">Methodological variations</h3>
@@ -265,10 +319,49 @@ ul.task-list li input[type="checkbox"] {
 </table>
 <p>Based on the results of three of the four metrics, selecting 20 of the most important proteins from each selection method improved the classification accuracy, albeit by relatively small margins. Sensitivity was the only metric included in our set that showed a decline in performance when compared to the original classifier, while the overall accuracy increased by 0.03%. In this scenario, a doubling of the amount of top predictive proteins selected from the multiple testing and random forest methods slightly improved results, but it’s unclear whether further increases in this amount would help or harm predictive accuracy, as well as what the perfect amount to select from each method would be.</p>
 <p><strong>Modification 3:</strong> Using a fuzzy (instead of hard) intersection to combine the sets of proteins chosen by each selection method.</p>
+<p>In the in-class analysis of the biomarker dataset, the panel of proteins selected to the finalized model was found by taking an intersection between the resulting proteins of the random forest and multiple testing methods. For this modification, we took a union of the proteins from the two groups instead.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Estimator</th>
+<th>Estimate</th>
+<th>Difference</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>sensitivity</td>
+<td>Binary</td>
+<td>0.562</td>
+<td>-0.313</td>
+</tr>
+<tr class="even">
+<td>specificity</td>
+<td>Binary</td>
+<td>0.733</td>
+<td>-0.067</td>
+</tr>
+<tr class="odd">
+<td>accuracy</td>
+<td>Binary</td>
+<td>0.645</td>
+<td>-0.1937</td>
+</tr>
+<tr class="even">
+<td>roc_auc</td>
+<td>Binary</td>
+<td>0.779</td>
+<td>-0.1293</td>
+</tr>
+</tbody>
+</table>
+<p>Based on the results shown in the table above, using a fuzzy intersection rather than a hard intersection was definitively not an effective modification to the analysis. Each of the four classification metrics decreased in value, with sensitivity in particular declining by over 30%. Thus it seems that it is beneficial to only use the proteins found to be among the top 10 most important from <strong>both</strong> selection method rather than use all proteins found from each method.</p>
 </section>
 <section id="improved-classifier" class="level3">
 <h3 class="anchored" data-anchor-id="improved-classifier">Improved classifier</h3>
 <p>Task 4</p>
+<p>In this analysis, we improved our model’s accuracy by selecting key protein biomarkers using a two-step approach. First, we used t-tests to find significant proteins differentiating the ASD and TD groups, creating the subset proteins_s1. Then, we trained a Random Forest model to identify another subset, proteins_s2, based on feature importance. We performed a grid search using combinations of these subsets to optimize the AUC, which outperformed the initial in-class analysis that used all proteins. This method effectively found down critical biomarkers, improving the model’s AUC to 0.967.</p>
 </section>
 </section>
 
