@@ -1,7 +1,7 @@
 ---
 title: "Biomarkers of ASD"
-subtitle: "If you want a subtitle put it here"
-author: "List names here"
+subtitle: "Group 14"
+author: "Benjamin Drabeck, Yamileth Martinez, Sean Ragan, Carter Kulm"
 date: last-modified
 published-title: "Updated"
 editor: visual
@@ -14,37 +14,284 @@ execute:
   cache: true
 ---
 
-Use this as a template. Keep the headers and remove all other text. In all, your report can be quite short. When it is complete, render and then push changes to your team repository.
-
-```{r}
+```{r warning = F, message = F}
 # load any other packages and read data here
 library(tidyverse)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+
+data <- read.csv("biomarker-raw.csv")
+var_names <- read_csv('biomarker-raw.csv', 
+                     col_names = F,
+                     show_col_types = F,
+                     n_max = 2, 
+                     col_select = -(1:2)) %>%
+  t() %>%
+  as_tibble() %>%
+  rename(name = V1, 
+         abbreviation = V2) %>%
+  na.omit()
+trim <- function(x, .at){
+  x[abs(x) > .at] <- sign(x[abs(x) > .at])*.at
+  return(x)
+}
+biomarker_clean <- read_csv('biomarker-raw.csv', 
+         skip = 2,
+         show_col_types = F,
+         col_select = -2L,
+         col_names = c('group', 
+                       'empty',
+                       pull(var_names, abbreviation),
+                       'ados'),
+         na = c('-', '')) %>%
+  filter(!is.na(group)) %>%
+  mutate(across(.cols = -c(group, ados), 
+                ~ trim(scale(log10(.x))[, 1], .at = 3))) %>%
+  select(group, ados, everything())
 ```
 
 ## Abstract
 
-Write a brief one-paragraph abstract that describes the contents of your write-up.
+Using the analysis conducted by Hewitson et al in 2021 that set out to classify young males as either ASD or TD using the biomarker dataset, our group set out to understand the methodology employed in the original study in addition to developing a deeper understanding of the dataset and the predictive power of the proteins contained in it. For the preprocessing aspect of our work, we first looked at the necessary transformations required to conduct multiple testing on the data. We then looked at the difference in outlier characteristics between the ASD and TD groups, and found that both groups were similar in this realm. Moving on to the analysis of the biomarker dataset, task 3 consisted of seeing the effect that three slight differences in methodology had on the classification accuracy of the model. And lastly, in task 4 a grid search was used to finalize the proteins that were to be included in the panel used in the model.
 
 ## Dataset
 
-Write a brief data description, including: how data were obtained; sample characteristics; variables measured; and data preprocessing. This can be largely based on the source paper and should not exceed 1-2 paragraphs.
+For the paper, 154 male pediatric subjects were measured and split into two groups (ASD and TD). From the write-up, "The ethnic breakdown was as follows: 73 White/Caucasian, 32 Hispanic/Latino, 17 African American/Black, 5 Asian or Pacific Islander, 23 multiple ethnicities or other, and 4 not reported". This gave the researchers a fairly large variety to do their analysis on. The data on the proteins was collected through a blood draw that was then carefully stored for analysis.
+
+The resulting blood results contained a look at 1,317 proteins from the 154 participants. 192 of which were excluded because they lacked quality control so the end dataset examined 1,125 proteins. These protein values were then normalized through a log10 transform into a z transform. Finally, any outliers that resided above or below 3 and -3 respectively were clipped to 3 and -3 respectively. This preproccessing allowed the researchers to then perform three different tests on the dataset given its new configuration.
 
 ## Summary of published analysis
 
-Summarize the methodology of the paper in 1-3 paragraphs. You need not explain the methods in depth as we did in class; just indicate what methods were used and how they were combined. If possible, include a diagram that depicts the methodological design. (Quarto has support for [GraphViz and Mermaid flowcharts](https://quarto.org/docs/authoring/diagrams.html).) Provide key results: the proteins selected for the classifier and the estimated accuracy.
+Below is a diagram that displays the methodological design used in the paper.
+
+```{mermaid}
+flowchart LR
+  A(1225 proteins)
+  A(1225 proteins) --> C(Random forest)
+  A --> D(T-test analysis between ASD and TD groups)
+  A --> E(Correlation analysis with ASD severity)
+  C --> F(10 most important proteins)
+  D --> G(10 most important proteins)
+  E --> H(10 most important proteins)
+  F --> I(5 core proteins common among each method)
+  G --> I
+  H --> I
+  F --> J(4 non-core proteins that improved AUC)
+  G --> J
+  H --> J
+  I --> L(9 optimal proteins)
+  J --> L
+```
+
+**Note**: talked to TA Erika and Mermaid chunk would not run (tried dot as well). But, code renders.
+
+As we can see, the study used three different methods to find the most important proteins (out of an original 1225) for predicting ASD: Random Forest, t-test, and a correlation approach. ten were selected from each method, and the five proteins common to all three groups of ten were labelled as "core" proteins. Furthermore, out of thirteen proteins that were not common among all three groups but were found to be among the ten most important using one of the methods, four proteins were found to increase the predictive accuracy of the panel, and were thus added to these optimal proteins. The proteins are listed here: IgD, suPAR, MAPK14, EPHB2, DERM, ROR1, GI24, eIF-4H, ARSB.
+
+To evaluate the classification accuracy of these optimal proteins, a logistic regression model was used and area under the ROC curve (AUC) was used as the primary metric. The resulting estimated accuracy of this panel in classifying ASD, as measured with AUC, was 0.860 +- 0.064.
 
 ## Findings
 
-Summarize your findings here. I've included some subheaders in a way that seems natural to me; you can structure this section however you like.
-
 ### Impact of preprocessing and outliers
 
-Tasks 1-2
+Task 1
 
-### Methodlogical variations
+When looking at the raw distributions of the biomarker-raw.csv file some interesting findings occurred. As seen from the graphs below, we can see that the distributions are all skewed right. Some of them vary on the severity of the skewness but they all produce a right skew nonetheless. This makes sense why they would need to be log transformed. Log transformations can introduce normality into the data distributions. This is important because of how skewed our data is. By log transforming, we are able to normalize the data which allows us to perform the t-tests on the data that require normality to be accurate in their analysis.
+
+```{r, warning = FALSE}
+# Select a subset of columns for proteins (skip the first two columns)
+protein_columns <- colnames(data)[3:length(colnames(data))]
+
+# Randomly select 5 protein columns
+set.seed(123) # Set seed for reproducibility
+selected_proteins <- sample(protein_columns, 5)
+
+# Convert selected columns to numeric and handle any issues with non-numeric data
+data[selected_proteins] <- lapply(data[selected_proteins], function(x) as.numeric(as.character(x)))
+
+# Filter to keep only rows without NA values in selected proteins
+protein_data <- data %>% select(all_of(selected_proteins)) %>% drop_na()
+
+# Reshape data for ggplot
+protein_data_long <- protein_data %>% 
+  pivot_longer(cols = everything(), names_to = "Protein", values_to = "Raw_Value") %>%
+  mutate(Raw_Value = as.numeric(Raw_Value))  # Ensure Raw_Value is numeric
+
+# Plot distributions using ggplot2
+ggplot(protein_data_long, aes(x = Raw_Value)) +
+  geom_histogram(bins = 20, fill = "skyblue", color = "black") +
+  facet_wrap(~ Protein, scales = "free_x") +
+  labs(title = "Distribution of Raw Values for Selected Proteins",
+       x = "Raw Value", y = "Frequency") +
+  theme_minimal()
+```
+
+Let us now look at how the log transformed distributions for another 5 sampled proteins turns out.
+
+```{r}
+sampled_proteins <- biomarker_clean %>%
+  select(sample(names(.), 5)) %>%
+  pivot_longer(cols = everything(), names_to = "Protein", values_to = "Transformed_Value")
+
+# Plot histograms for each selected protein using facet_wrap (Transformed Values)
+ggplot(sampled_proteins, aes(x = Transformed_Value)) +
+  geom_histogram(binwidth = 0.5, fill = "skyblue", color = "black") +
+  facet_wrap(~ Protein, scales = "free") +
+  labs(title = "Histograms of Transformed Values for Selected Proteins",
+       x = "Transformed Value",
+       y = "Frequency") +
+  theme_minimal()
+```
+
+Here, we can see that the values are much easier to analyze and deal with. They are mostly normally distributed now and their values are ranging between a much more understandable range instead of more sporadic values that populated the histograms with the raw csv file. For understanding the data and performing the tests it absolutely is logical to do a log10 transformation as seen in the process above with the clear change in the readability of the data.
+
+Task 2
+
+For the second task we were asked to perform an exploratory analysis on the outlying values after removing the outlier trimming. After temporarily removing the outlier trimming, we needed to identify the outlying values in the biomarker_clean.R file. However, during this process, multiple group members needed the data with the trimmed outliers, so we thought it would be best to create a copy of preprocessing.R (copy_preprocessing.R) and biomarker_clean.R (biomarker_clean2.R).
+
+We first needed to identify the outliers, which we did using interquartile range. After applying the outlier function to the data, excluding the `group` and `ados` categories as they are categorical, we identified the subjects with the most outliers, as shown below.
+
+```{r}
+# exploratory analysis of outlying values
+biomarker_clean2 <- read_csv('biomarker-raw.csv',
+                            skip = 2,
+                            col_select = -2L,
+                            col_names = c('group', 
+                                          'empty',
+                                          pull(var_names, abbreviation),
+                                          'ados'),
+                            na = c('-', '')) %>%
+  filter(!is.na(group)) %>%
+  mutate(across(.cols = -c(group, ados),
+                ~ scale(log10(.x))[,1])) %>%
+  select(group, ados, everything())
+
+# function to find outliers using IQR
+find_outliers <- function(x) {
+  # IQR and upper/lower bounds
+  Q1 <- quantile(x, 0.25, na.rm = TRUE)
+  Q3 <- quantile(x, 0.75, na.rm = TRUE)
+  IQR <- Q3 - Q1
+  lower_bound <- Q1 - 1.5 * IQR
+  upper_bound <- Q3 + 1.5 * IQR
+  
+  # returns TRUE if outlier
+  (x < lower_bound | x > upper_bound)
+}
+
+2# testing function on data
+outliers <- biomarker_clean2 %>%
+  mutate(across(.cols = -c(group, ados), ~ find_outliers(.x))) %>%
+  summarise(across(.cols = -c(group, ados), sum, na.rm = TRUE))
+
+# applying outlier function
+# not 'group' and 'ados' : categorical
+outlier_total <- biomarker_clean2 %>%
+  mutate(across(.cols = -c(group, ados), ~ find_outliers(.x))) %>%
+  rowwise() %>%
+  mutate(outlier_count = sum(c_across(-c(group, ados)))) %>%
+  ungroup() %>%
+  select(group, ados, outlier_count)
+top_outliers <- outlier_total %>%
+  arrange(desc(outlier_count))
+
+print(top_outliers)
+```
+
+We then wanted to see which group of subjects had the higher number of outliers, which we did using a summary of the outliers. This gave us the subject and compares the mean and maximum number of outliers, which is displayed below.
+
+```{r}
+group_outliers <- outlier_total %>%
+  group_by(group) %>%
+  summarise(mean_outliers = mean(outlier_count),
+            max_outliers = max(outlier_count),
+            min_outliers = min(outlier_count),
+            count = n())
+
+print(group_outliers)
+```
+
+Below are visual, graphical representations of the outlier count by group.
+
+```{r}
+# boxplot to visualizing outlier count by group
+ggplot(outlier_total, aes(x = group, y = outlier_count)) +
+  geom_boxplot() +
+  labs(title = "Outlier Counts by Group", 
+       x = "Group", 
+       y = "Outlier Count") +
+  theme_minimal()
+```
+
+```{r}
+# histogram for outlier counts by group
+ggplot(outlier_total, aes(x = outlier_count, fill = group)) +
+  geom_histogram(binwidth = 5, position = "dodge", alpha = 0.7) +
+  labs(title = "Histogram of Outlier Counts by Group",
+       x = "Outlier Count",
+       y = "Frequency") +
+  theme_minimal() +
+  scale_fill_manual(values = c("ASD" = "blue", "TD" = "orange"))  
+```
+
+As you can see through our exploratory analysis, both groups have similar mean outliers, as well as total number of outliers. There does not appear to be more outliers in one group of subjects than the other, which we can see when looking at both our summary of the outliers and the visual representations. The boxplot shows more clearly the variation in the TD group than the ASD group when it comes to outliers, but overall, the ASD and TD groups are similar in their counts of outlying values.
+
+### Methodological variations
 
 Task 3
+
+Results of unmodified analysis:
+
+| Metric      | Estimator | Estimate |
+|-------------|-----------|----------|
+| sensitivity | binary    | 0.8750   |
+| specificity | binary    | 0.8000   |
+| accuracy    | binary    | 0.8387   |
+| roc_auc     | binary    | 0.9083   |
+
+**Modification 1:** Carrying our selection procedure using a training partition.
+
+In the original analysis, the t-test and random forest methods of selecting important proteins were conducted using the entire biomarker dataset. For the first modification, proteins were selected by partioning the dataset into training and testing groups before analysis, then using training data to select proteins and evaluating the resulting panel's accuracy using testing data.
+
+Below are the results of this modification (the difference column represents the change in each metric from the original method):
+
+| Metric      | Estimator | Estimate | Difference |
+|-------------|-----------|----------|------------|
+| sensitivity | binary    | 0.7647   | -0.1103    |
+| specificity | binary    | 0.7857   | -0.0143    |
+| accuracy    | binary    | 0.7741   | -0.0646    |
+| roc_auc     | binary    | 0.8067   | -0.1016    |
+
+As we can see, each metric used to evaluate the accuracy of our classifier became worse. Both sensitivity (% of true positives) and roc_auc (a measure of true positive rate and false positive rate ) decreased by over 10 percentage points, while specificity (% of true negatives) and accuracy (% correct) decreased by modest amounts. Thus it seems that partitioning the data prior to conducting analysis in this scenario did not improve results, which is not too surprising considering the modified models were given less data to train on than the unmodified ones. Had more observations been in the biomarker dataset, the results may have more closely aligned. Furthermore, the partitioning of the data is done randomly, so perhaps a different seed would have altered the results.
+
+**Modification 2:** Selecting 20 predictive proteins using each selection method.
+
+While the top 10 predictive proteins were selected from each method during the in-class analysis, we will see if selecting 20 proteins instead will help the classifier's accuracy. Below are the results of carrying out this modification:
+
+| Method      | Estimator | Estimate | Difference |
+|-------------|-----------|----------|------------|
+| sensitivity | Binary    | 0.812    | -0.063     |
+| specificity | Binary    | 0.867    | 0.067      |
+| accuracy    | Binary    | 0.839    | 0.0003     |
+| roc_auc     | Binary    | 0.946    | 0.0377     |
+
+Based on the results of three of the four metrics, selecting 20 of the most important proteins from each selection method improved the classification accuracy, albeit by relatively small margins. Sensitivity was the only metric included in our set that showed a decline in performance when compared to the original classifier, while the overall accuracy increased by 0.03%. In this scenario, a doubling of the amount of top predictive proteins selected from the multiple testing and random forest methods slightly improved results, but it's unclear whether further increases in this amount would help or harm predictive accuracy, as well as what the perfect amount to select from each method would be.
+
+**Modification 3:** Using a fuzzy (instead of hard) intersection to combine the sets of proteins chosen by each selection method.
+
+In the in-class analysis of the biomarker dataset, the panel of proteins selected to the finalized model was found by taking an intersection between the resulting proteins of the random forest and multiple testing methods. For this modification, we took a union of the proteins from the two groups instead.
+
+| Method      | Estimator | Estimate | Difference |
+|-------------|-----------|----------|------------|
+| sensitivity | Binary    | 0.562    | -0.313     |
+| specificity | Binary    | 0.733    | -0.067     |
+| accuracy    | Binary    | 0.645    | -0.1937    |
+| roc_auc     | Binary    | 0.779    | -0.1293    |
+
+Based on the results shown in the table above, using a fuzzy intersection rather than a hard intersection was definitively not an effective modification to the analysis. Each of the four classification metrics decreased in value, with sensitivity in particular declining by over 30%. Thus it seems that it is beneficial to only use the proteins found to be among the top 10 most important from **both** selection method rather than use all proteins found from each method.
 
 ### Improved classifier
 
 Task 4
+
+In this analysis, we improved our model's accuracy by selecting key protein biomarkers using a two-step approach. First, we used t-tests to find significant proteins differentiating the ASD and TD groups, creating the subset proteins_s1. Then, we trained a Random Forest model to identify another subset, proteins_s2, based on feature importance. We performed a grid search using combinations of these subsets to optimize the AUC, which outperformed the initial in-class analysis that used all proteins. This method effectively found down critical biomarkers, improving the model's AUC to 0.967.
