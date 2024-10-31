@@ -150,6 +150,37 @@ For the second task we were asked to perform an exploratory analysis on the outl
 
 We first needed to identify the outliers, which we did using interquartile range. After applying the outlier function to the data, excluding the `group` and `ados` categories as they are categorical, we identified the subjects with the most outliers, as shown below.
 ```{r}
+# exploratory analysis of outlying values
+
+library(tidyverse)
+library(ggplot2)
+
+# function to find outliers using IQR
+find_outliers <- function(x) {
+  # IQR and upper/lower bounds
+  Q1 <- quantile(x, 0.25, na.rm = TRUE)
+  Q3 <- quantile(x, 0.75, na.rm = TRUE)
+  IQR <- Q3 - Q1
+  lower_bound <- Q1 - 1.5 * IQR
+  upper_bound <- Q3 + 1.5 * IQR
+  
+  # returns TRUE if outlier
+  (x < lower_bound | x > upper_bound)
+}
+
+# testing function on data
+outliers <- biomarker_clean2 %>%
+  mutate(across(.cols = -c(group, ados), ~ find_outliers(.x))) %>%
+  summarise(across(.cols = -c(group, ados), sum, na.rm = TRUE))
+
+# applying outlier function
+# not 'group' and 'ados' : categorical
+outlier_total <- biomarker_clean2 %>%
+  mutate(across(.cols = -c(group, ados), ~ find_outliers(.x))) %>%
+  rowwise() %>%
+  mutate(outlier_count = sum(c_across(-c(group, ados)))) %>%
+  ungroup() %>%
+  select(group, ados, outlier_count)
 top_outliers <- outlier_total %>%
   arrange(desc(outlier_count))
 
