@@ -146,6 +146,48 @@ Here, we can see that the values are much easier to analyze and deal with. They 
 Task 2
 
 ### Methodological variations
+For the second task we were asked to perform an exploratory analysis on the outlying values after removing the outlier trimming. After temporarily removing the outlier trimming, we needed to identify the outlying values in the biomarker_clean.R file. However, during this process, multiple group members needed the data with the trimmed outliers, so we thought it would be best to create a copy of preprocessing.R (copy_preprocessing.R) and biomarker_clean.R (biomarker_clean2.R).
+
+We first needed to identify the outliers, which we did using interquartile range. After applying the outlier function to the data, excluding the `group` and `ados` categories as they are categorical, we identified the subjects with the most outliers, as shown below.
+```{r}
+top_outliers <- outlier_total %>%
+  arrange(desc(outlier_count))
+
+print(top_outliers)
+```
+We then wanted to see which group of subjects had the higher number of outliers, which we did using a summary of the outliers. This gave us the subject and compares the mean and maximum number of outliers, which is displayed below.
+```{r}
+group_outliers <- outlier_total %>%
+  group_by(group) %>%
+  summarise(mean_outliers = mean(outlier_count),
+            max_outliers = max(outlier_count),
+            min_outliers = min(outlier_count),
+            count = n())
+
+print(group_outliers)
+```
+Below are visual, graphical representations of the outlier count by group.
+```{r}
+# boxplot to visualizing outlier count by group
+ggplot(outlier_total, aes(x = group, y = outlier_count)) +
+  geom_boxplot() +
+  labs(title = "Outlier Counts by Group", 
+       x = "Group", 
+       y = "Outlier Count") +
+  theme_minimal()
+```
+
+```{r}
+# histogram for outlier counts by group
+ggplot(outlier_total, aes(x = outlier_count, fill = group)) +
+  geom_histogram(binwidth = 5, position = "dodge", alpha = 0.7) +
+  labs(title = "Histogram of Outlier Counts by Group",
+       x = "Outlier Count",
+       y = "Frequency") +
+  theme_minimal() +
+  scale_fill_manual(values = c("ASD" = "blue", "TD" = "orange"))  
+```
+As you can see through our exploratory analysis, both groups have similar mean outliers, as well as total number of outliers. There does not appear to be more outliers in one group of subjects than the other, which we can see when looking at both our summary of the outliers and the visual representations. The boxplot shows more clearly the variation in the TD group than the ASD group when it comes to outliers, but overall, the ASD and TD groups are similar in their counts of outlying values.
 
 Task 3
 
