@@ -233,3 +233,5 @@ Based on the results of three of the four metrics, selecting 20 of the most impo
 ### Improved classifier
 
 Task 4
+
+In this analysis, we improved our model's accuracy by selecting key protein biomarkers using a two-step approach. First, we used t-tests to find significant proteins differentiating the ASD and TD groups, creating the subset proteins_s1. Then, we trained a Random Forest model to identify another subset, proteins_s2, based on feature importance. We performed a grid search using combinations of these subsets to optimize the AUC, which outperformed the initial in-class analysis that used all proteins. This method effectively found down critical biomarkers, improving the model's AUC to 0.967.
